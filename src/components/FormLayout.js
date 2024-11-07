@@ -10,6 +10,8 @@ const FormLayout = () => {
   });
 
   const [savedForms, setSavedForms] = useState([]); // State for storing saved forms
+  const [showModal, setShowModal] = useState(false); // Modal visibility state
+  const [modalMessage, setModalMessage] = useState(''); // Modal message
 
   // Fetch saved forms from the backend
   const fetchForms = async () => {
@@ -48,53 +50,62 @@ const FormLayout = () => {
       });
       const result = await response.json();
       console.log('Form submitted successfully:', result);
-
+      if (result.success) {
+        setModalMessage('Form submitted successfully!');
+      } else {
+        setModalMessage('Failed to submit form. Please try again.');
+      }
+      setShowModal(true); // Show the modal after submission
       // Refresh the saved forms after submitting
       fetchForms();
     } catch (error) {
+      setModalMessage('An error occurred while submitting the form.');
+      setShowModal(true);
       console.error('Error submitting form:', error);
     }
   };
 
   return (
-    <form className="form-container" onSubmit={handleSubmit}>
-      <div className="section">
-        <h2>Basic Information</h2>
-        <div className="form-group">
-          <label>First Name:</label>
-          <input
-            type="text"
-            value={formData.basicInfo.firstName}
-            onChange={(e) => handleInputChange('basicInfo', 'firstName', e.target.value)}
-          />
+    <>
+      <form className="form-container" onSubmit={handleSubmit}>
+        <h1>Form Layout</h1>
+        <div className="section">
+          <h2>Basic Information</h2>
+          <div className="form-group">
+            <label>First Name:</label>
+            <input
+              type="text"
+              value={formData.basicInfo.firstName}
+              onChange={(e) => handleInputChange('basicInfo', 'firstName', e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label>Last Name:</label>
+            <input
+              type="text"
+              value={formData.basicInfo.lastName}
+              onChange={(e) => handleInputChange('basicInfo', 'lastName', e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label>Lead Type:</label>
+            <input
+              type="text"
+              value={formData.basicInfo.leadType}
+              onChange={(e) => handleInputChange('basicInfo', 'leadType', e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label>Lead Source:</label>
+            <input
+              type="text"
+              value={formData.basicInfo.leadSource}
+              onChange={(e) => handleInputChange('basicInfo', 'leadSource', e.target.value)}
+            />
+          </div>
         </div>
-        <div className="form-group">
-          <label>Last Name:</label>
-          <input
-            type="text"
-            value={formData.basicInfo.lastName}
-            onChange={(e) => handleInputChange('basicInfo', 'lastName', e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label>Lead Type:</label>
-          <input
-            type="text"
-            value={formData.basicInfo.leadType}
-            onChange={(e) => handleInputChange('basicInfo', 'leadType', e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label>Lead Source:</label>
-          <input
-            type="text"
-            value={formData.basicInfo.leadSource}
-            onChange={(e) => handleInputChange('basicInfo', 'leadSource', e.target.value)}
-          />
-        </div>
-      </div>
 
-      <div className="section">
+        <div className="section">
         <h2>Essential Dates</h2>
         <div className="form-group">
           <label>Date of Birth:</label>
@@ -170,17 +181,30 @@ const FormLayout = () => {
         </div>
       </div>
 
-      <button type="submit" className="submit-button">Submit</button>
+        {/* Add other form sections... */}
 
-      <h3>Saved Forms</h3>
-      <ul>
-        {savedForms.map((form) => (
-          <li key={form.id}>
-            <strong>{form.form_name}</strong>: {JSON.stringify(JSON.parse(form.form_data))}
-          </li>
-        ))}
-      </ul>
-    </form>
+        <button type="submit" className="submit-button">Submit</button>
+
+        <h3>Saved Forms</h3>
+        <ul>
+          {savedForms.map((form) => (
+            <li key={form.id}>
+              <strong>{form.form_name}</strong>: {JSON.stringify(JSON.parse(form.form_data))}
+            </li>
+          ))}
+        </ul>
+      </form>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <p>{modalMessage}</p>
+            <button onClick={() => setShowModal(false)}>Close</button>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

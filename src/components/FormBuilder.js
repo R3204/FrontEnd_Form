@@ -1,99 +1,176 @@
 import React, { useState, useEffect } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import './FormLayout.css'; // For styles
 
-const initialElements = [
-  { id: '1', type: 'Text Input' },
-  { id: '2', type: 'Textarea' },
-  { id: '3', type: 'Checkbox' },
-];
+const FormLayout = () => {
+  const [formData, setFormData] = useState({
+    basicInfo: { firstName: '', lastName: '', leadType: '', leadSource: '' },
+    essentialDates: { dob: '', anniversaryDate: '' },
+    contactInfo: { officePhone: '', primaryEmail: '', homePhone: '' },
+    addressInfo: { addressLine1: '', city: '', zip: '' },
+  });
 
-const FormBuilder = () => {
-  const [formComponents, setFormComponents] = useState([]);
-  const [savedForms, setSavedForms] = useState([]);
+  const [savedForms, setSavedForms] = useState([]); // State for storing saved forms
 
-  useEffect(() => {
-    fetchForms();
-  }, []);
-
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
-
-    const draggedElement = initialElements[result.source.index];
-    setFormComponents([...formComponents, draggedElement]);
-  };
-
-  const saveForm = async () => {
-    try {
-      const response = await fetch('http://localhost/form-builder-backend/save_form.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          form_name: `Form_${Date.now()}`, // Assign a unique name
-          form_data: formComponents, // Send the form components
-        }),
-      });
-  
-      const data = await response.json();
-      console.log('Form saved:', data);
-      fetchForms(); // Refresh the list after saving
-    } catch (error) {
-      console.error('Error saving form:', error);
-    }
-  };
-
+  // Fetch saved forms from the backend
   const fetchForms = async () => {
     try {
       const response = await fetch('http://localhost/form-builder-backend/list_forms.php');
       const data = await response.json();
-      console.log('Fetched Forms:', data); // Debugging fetched data
-      setSavedForms(data); // Update state with fetched forms
+      console.log('Fetched forms:', data);
+      setSavedForms(data);
     } catch (error) {
       console.error('Error fetching forms:', error);
     }
   };
 
+  // Call fetchForms when the component mounts
+  useEffect(() => {
+    fetchForms();
+  }, []);
+
+  const handleInputChange = (section, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch('http://localhost/form-builder-backend/save_form.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const result = await response.json();
+      console.log('Form submitted successfully:', result);
+
+      // Refresh the saved forms after submitting
+      fetchForms();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
+  };
+
   return (
-    <div>
-      <h2>Form Builder</h2>
-
-      {/* Drag and Drop Context */}
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="elements">
-          {(provided) => (
-            <div {...provided.droppableProps} ref={provided.innerRef}>
-              {initialElements.map((item, index) => (
-                <Draggable key={item.id} draggableId={item.id} index={index}>
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      style={{
-                        padding: '10px',
-                        margin: '5px',
-                        border: '1px solid gray',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      {item.type}
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
-
-      <h3>Form Preview</h3>
-      <div>
-        {formComponents.map((comp, index) => (
-          <div key={index}>{comp.type}</div>
-        ))}
+    <form className="form-container" onSubmit={handleSubmit}>
+      <div className="section">
+        <h2>Basic Information</h2>
+        <div className="form-group">
+          <label>First Name:</label>
+          <input
+            type="text"
+            value={formData.basicInfo.firstName}
+            onChange={(e) => handleInputChange('basicInfo', 'firstName', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>Last Name:</label>
+          <input
+            type="text"
+            value={formData.basicInfo.lastName}
+            onChange={(e) => handleInputChange('basicInfo', 'lastName', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>Lead Type:</label>
+          <input
+            type="text"
+            value={formData.basicInfo.leadType}
+            onChange={(e) => handleInputChange('basicInfo', 'leadType', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>Lead Source:</label>
+          <input
+            type="text"
+            value={formData.basicInfo.leadSource}
+            onChange={(e) => handleInputChange('basicInfo', 'leadSource', e.target.value)}
+          />
+        </div>
       </div>
 
-      <button onClick={saveForm}>Save Form</button>
+      <div className="section">
+        <h2>Essential Dates</h2>
+        <div className="form-group">
+          <label>Date of Birth:</label>
+          <input
+            type="date"
+            value={formData.essentialDates.dob}
+            onChange={(e) => handleInputChange('essentialDates', 'dob', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>Anniversary Date:</label>
+          <input
+            type="date"
+            value={formData.essentialDates.anniversaryDate}
+            onChange={(e) => handleInputChange('essentialDates', 'anniversaryDate', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="section">
+        <h2>Contact Information</h2>
+        <div className="form-group">
+          <label>Office Phone:</label>
+          <input
+            type="tel"
+            value={formData.contactInfo.officePhone}
+            onChange={(e) => handleInputChange('contactInfo', 'officePhone', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>Primary Email:</label>
+          <input
+            type="email"
+            value={formData.contactInfo.primaryEmail}
+            onChange={(e) => handleInputChange('contactInfo', 'primaryEmail', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>Home Phone:</label>
+          <input
+            type="tel"
+            value={formData.contactInfo.homePhone}
+            onChange={(e) => handleInputChange('contactInfo', 'homePhone', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="section">
+        <h2>Address Information</h2>
+        <div className="form-group">
+          <label>Address Line 1:</label>
+          <input
+            type="text"
+            value={formData.addressInfo.addressLine1}
+            onChange={(e) => handleInputChange('addressInfo', 'addressLine1', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>City:</label>
+          <input
+            type="text"
+            value={formData.addressInfo.city}
+            onChange={(e) => handleInputChange('addressInfo', 'city', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>ZIP:</label>
+          <input
+            type="text"
+            value={formData.addressInfo.zip}
+            onChange={(e) => handleInputChange('addressInfo', 'zip', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <button type="submit" className="submit-button">Submit</button>
 
       <h3>Saved Forms</h3>
       <ul>
@@ -103,8 +180,8 @@ const FormBuilder = () => {
           </li>
         ))}
       </ul>
-    </div>
+    </form>
   );
 };
 
-export default FormBuilder;
+export default FormLayout;
